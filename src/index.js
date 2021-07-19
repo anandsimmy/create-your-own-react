@@ -63,7 +63,6 @@ const performUnitOfWork= (unitOfWork) => {
 
 }
 
-requestIdleCallback(workLoop)
 
 // concurrent mode- END
 
