@@ -41,16 +41,33 @@ const createDom= (fiber) => {
 
 // concurrent mode- START
 
-let nextUnitOfWork= null
-let { requestIdleCallback }= window
+let nextUnitOfWork = null
+let wipRoot = null
+let { requestIdleCallback } = window
 
 const render= (element, container) => {
-    nextUnitOfWork= {
+    wipRoot = {
         dom: container,
         props: {
             children: [element]
         }
     }
+    nextUnitOfWork = wipRoot
+}
+
+const commitRoot = () => {
+    commitWork(wipRoot.child)
+    wipRoot = null
+}
+
+const commitWork = (fiber) => {
+    if(!fiber) {
+        return
+    }
+    const domParent = fiber.parent.dom
+    domParent.appendChild(fiber.dom)
+    commitWork(fiber.child)
+    commitWork(fiber.sibling)
 }
 
 const workLoop= (deadline) => {
@@ -59,17 +76,24 @@ const workLoop= (deadline) => {
         nextUnitOfWork= performUnitOfWork(nextUnitOfWork)
         shouldYield= deadline.timeRemaining() < 1
     }
+    if(!nextUnitOfWork && wipRoot) {
+        commitRoot()
+    }
     requestIdleCallback(workLoop)
 }
 
 const performUnitOfWork= (fiber) => {
+    console.log(1, fiber);
     if(!fiber.dom){
         fiber.dom= createDom(fiber)
     }
-    if(fiber.parent){
-        fiber.parent.dom.appendChild(fiber.dom)
-        console.log(fiber, fiber.parent);
-    }
+
+    // we will commit changes altogether, at the end of the render. so not using this
+    // if(fiber.parent){
+    //     fiber.parent.dom.appendChild(fiber.dom)
+    //     console.log(2, fiber, fiber.parent);
+    // }
+
     if(fiber.props.children){
         let index= 0
         let prevSibling= null
@@ -97,8 +121,10 @@ const performUnitOfWork= (fiber) => {
     let nextFiber= fiber
     while(nextFiber){
         if(nextFiber.sibling){
+            // searching for sibling
             return nextFiber.sibling
         }
+        // if no sibling is found, then go to next parent at the top and then search for parents sibling (uncle)
         nextFiber= nextFiber.parent
     }
     return null
@@ -116,7 +142,7 @@ const MyReact= {
 /** @jsx MyReact.createElement */
 const element= (
     <div id='my-react' className='hello'>
-        <h1 style="color:blue">Creating My Own React</h1>
+        <h1 style='color:blue'>Creating My Own React</h1>
     </div>
 )
 
