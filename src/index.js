@@ -43,6 +43,7 @@ const createDom= (fiber) => {
 
 let nextUnitOfWork = null
 let wipRoot = null
+let currentRoot = null
 let { requestIdleCallback } = window
 
 const render= (element, container) => {
@@ -50,13 +51,16 @@ const render= (element, container) => {
         dom: container,
         props: {
             children: [element]
-        }
+        },
+        alternate: currentRoot,
     }
     nextUnitOfWork = wipRoot
 }
 
 const commitRoot = () => {
+    console.log('wipRoot', wipRoot)
     commitWork(wipRoot.child)
+    currentRoot= wipRoot
     wipRoot = null
 }
 
