@@ -60,7 +60,6 @@ const render= (element, container) => {
 const commitRoot = () => {
     console.log('wipRoot', wipRoot)
     commitWork(wipRoot.child)
-    currentRoot= wipRoot
     wipRoot = null
 }
 
